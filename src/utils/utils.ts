@@ -17,3 +17,13 @@ export const getBase64 = (file: File) => {
 }
 
 export const getExtByString = (name: string) => name.split('.')?.pop()?.toLowerCase()
+
+export const downloadByURL = (url: string, filename?: string) => {
+  const elink = document.createElement('a')
+  elink.download = filename?.replaceAll('"', '') ?? ''
+  elink.style.display = 'none'
+  elink.href = url
+  document.body.appendChild(elink)
+  elink.click()
+  document.body.removeChild(elink)
+}

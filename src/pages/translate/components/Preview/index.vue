@@ -2,16 +2,18 @@
 import type { UploadFile } from 'ant-design-vue'
 import { ACCEPT } from '~/pages/img-tool/config/index'
 
-const props = defineProps<{ convert: string[]; files: UploadFile[]; active: string; canvas: any }>()
+const props = defineProps<{ convert: string[]; files: UploadFile[]; active: string }>()
 const buttonRef = ref()
 const handleUpload = () => {
   console.log(1)
   buttonRef.value.$el.click()
 }
+
+const prevewMtrIndex = computed(() => props.files.findIndex(e => e.uid === props.active))
 </script>
 
 <template>
-  <div w-full h-full relative>
+  <div w-full h-full relative bg-gray-1>
     <div v-if="!files.length" w-full h-full cursor-pointer @click="handleUpload">
       <div hidden>
         <el-upload
@@ -38,7 +40,9 @@ const handleUpload = () => {
     </div>
 
     <div v-else flex flex-col w-full h-full cursor-pointer>
-      <slot />
+      <div v-show="convert.length" flex flex-1 items-center justify-center overflow-auto>
+        <img :src="convert[prevewMtrIndex]">
+      </div>
     </div>
   </div>
 </template>

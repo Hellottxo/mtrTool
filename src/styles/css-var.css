@@ -1,0 +1,9 @@
+:root, html.dark {
+    --el-color-primary: #00b89c;
+    --el-color-primary-light-3: #26a69a;
+    --el-color-primary-light-5: #4db6ac;
+    --el-color-primary-light-7: #80cbc4;
+    --el-color-primary-light-8: #b2dfdb;
+    --el-color-primary-light-9: #e0f2f1;
+    --el-color-primary-dark-2: #009688;
+}

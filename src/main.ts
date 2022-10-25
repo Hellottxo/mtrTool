@@ -3,9 +3,10 @@ import { setupLayouts } from 'virtual:generated-layouts'
 import App from './App.vue'
 import type { UserModule } from './types'
 import generatedRoutes from '~pages'
-
+import 'element-plus/theme-chalk/dark/css-vars.css'
 import '@unocss/reset/tailwind.css'
 import './styles/main.css'
+import './styles/css-var.css'
 import 'uno.css'
 
 const routes = setupLayouts(generatedRoutes)

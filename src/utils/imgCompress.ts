@@ -27,8 +27,9 @@ const generateConvertCommand = (name: string, extConfig: ExtConfig, config: Conv
 }
 
 const genertateCompositeCommand = (files: any[]) => {
-  const commands = ['composite', '-gravity', 'center']
+  const commands = ['convert', '-append']
   files.forEach(e => commands.push(e.name))
+
   return commands
 }
 
@@ -54,7 +55,6 @@ export const convertImage = async (
       Module.callMain(commands)
     })
     return inputFiles.map((e) => {
-      console.log(FS.readFile(e.outPut))
       return FS.readFile(e.outPut)
     })
   }

@@ -13,7 +13,7 @@ import Inspect from 'vite-plugin-inspect'
 import LinkAttributes from 'markdown-it-link-attributes'
 import Unocss from 'unocss/vite'
 import Shiki from 'markdown-it-shiki'
-import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 export default defineConfig({
   resolve: {
@@ -52,17 +52,18 @@ export default defineConfig({
         'src/store',
       ],
       vueTemplate: true,
+      resolvers: [ElementPlusResolver()],
     }),
 
     // https://github.com/antfu/unplugin-vue-components
     Components({
-      dirs: ['src/components', 'src/pages'],
+      dirs: ['src/components'],
       // allow auto load markdown components under `./src/components/`
       extensions: ['vue', 'md'],
       // allow auto import and register components used in markdown
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
       dts: 'src/components.d.ts',
-      resolvers: [AntDesignVueResolver()],
+      resolvers: [ElementPlusResolver()],
     }),
 
     // https://github.com/antfu/unocss

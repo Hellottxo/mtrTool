@@ -1,87 +1,147 @@
 <script setup lang="ts" name="Toolbar">
 import type { UploadFile } from 'ant-design-vue'
-import { ACCEPT, FORMAT_OPTIONS } from '~/pages/img-tool/config/index'
-// const downMode = ref('zip')
-const props = defineProps<{ files: UploadFile[]; active: string }>()
+import { ACCEPT, FORMAT_OPTIONS, VIDEO_EDIT_OPTIONS } from '../../config/index'
+import { downloadByURL } from '~/utils/utils'
 
-const emit = defineEmits(['handleConvert', 'activeChg'])
-const outputExt = ref('jpg')
-const quality = ref(60)
-const size = reactive({
-  width: 1024,
-  height: 1024,
-})
+// const downMode = ref('zip')
+const props = defineProps<{
+  files: UploadFile[]
+  active: string
+  form: Record<string, any>
+  convert: string[]
+}>()
+
+const emit = defineEmits(['handleConvert', 'activeChg', 'updateForm', 'fileChg', 'del'])
+
 const handle = (val: string) => {
-  const config = {
-    quality: outputExt.value === 'png' ? 0 : quality.value,
-    width: size.width,
-    height: size.height,
-  }
-  emit('handleConvert', val, config, outputExt.value)
+  emit('handleConvert', val)
+}
+
+const updateFormData = (key: string, val: string) => {
+  emit('updateForm', key, val)
+}
+const download = () => {
+  downloadByURL(props.convert[0], `output.${props.form.outputExt}`)
 }
 </script>
 
 <template>
   <div w-full h-full max-w-lg p-y-4 p-x-4>
-    <DisplayList v-if="files.length" :list="files" w-full :active="active" @active-chg="$emit('activeChg', $event)" />
+    <DisplayList
+      v-if="files.length"
+      type="video"
+      :list="files"
+      w-full
+      :active="active"
+      @active-chg="$emit('activeChg', $event)"
+      @del="$emit('del', $event)"
+    />
 
-    <a-upload
+    <el-upload
       :file-list="files"
       list-type="picture-card"
       :before-upload="() => false"
       name="file"
       :accept="ACCEPT.join(',')"
       multiple
+      :open-file-dialog-on-click="true"
       :show-upload-list="false"
-      @change="$emit('fileChange', $event)"
+      @change="$emit('fileChg', $event)"
     >
       <div i-fxemoji:up text-5 />
-    </a-upload>
+    </el-upload>
     <div>
       <div flex items-center p-y-2 rounded-2 m-b-2>
-        <span text-4 m-r-4>format</span>
-        <a-select
+        <span text-4 m-r-4 w-20>格式</span>
+        <el-select
           ref="select"
-          v-model:value="outputExt"
+          :value="form.outputExt"
           style="width: 120px"
+          @change="updateFormData('outputExt', $event)"
         >
-          <a-select-option v-for="item in FORMAT_OPTIONS" :key="item" :value="item">
+          <el-option v-for="item in FORMAT_OPTIONS" :key="item" :value="item">
             {{ item }}
-          </a-select-option>
-        </a-select>
+          </el-option>
+        </el-select>
       </div>
-      <div v-if="outputExt !== 'png'" flex items-center p-y-2 rounded-2 m-b-2>
-        <span text-4 m-r-4>quality</span>
-        <a-slider v-model:value="quality" class="w-full m-r-4" :tip-formatter="null" />
-        <div>{{ quality }}%</div>
+      <!-- <div v-if="form.outputExt !== 'png'" flex items-center p-y-2 rounded-2 m-b-2>
+        <span text-4 m-r-4 w-20>品质</span>
+        <el-slider
+          :value="form.quality"
+          class="flex-1"
+          :tip-formatter="null"
+          @change="updateFormData('quality', $event)"
+        />
+        <div>{{ form.quality }}%</div>
+      </div> -->
+      <div v-if="form.outputExt !== 'png'" flex items-center p-y-2 rounded-2 m-b-2>
+        <span text-4 m-r-4 w-20 shrink-0>水印文字</span>
+        <el-input
+          :value="form.watermarkText"
+          placeholder="请添加水印文字"
+          flex-1
+          @change="updateFormData('watermarkText', $event.target.value)"
+        />
+      </div>
+      <div v-if="form.outputExt !== 'png'" flex items-center p-y-2 rounded-2 m-b-2>
+        <span text-4 m-r-4 w-20 shrink-0>文字颜色</span>
+        <el-input
+          :value="form.watermarkTextColor"
+          type="color"
+          @change="updateFormData('watermarkTextColor', $event.target.value)"
+        />
+        <span text-4 m-r-4 w-20 shrink-0 m-l-4>文字大小</span>
+        <el-input
+          :value="form.watermarkTextSize"
+          addon-after="px"
+          @change="updateFormData('watermarkTextSize', $event.target.value)"
+        />
       </div>
       <div flex items-center p-y-2 rounded-2 m-b-2>
-        <span text-4 m-r-4>size</span>
-        <a-input v-model:value="size.width" />
-        <span>✖️</span>
-        <a-input v-model:value="size.height" />
+        <span text-4 m-r-4 w-20 shrink-0>宽</span>
+        <el-input
+          placeholder="auto"
+          :value="form.width" w-4
+          @change="updateFormData('width', $event.target.value)"
+        />
+        <span text-4 m-r-4 w-20 shrink-0 m-l-4>高</span>
+        <el-input
+          placeholder="auto"
+          :value="form.height" w-4
+          @change="updateFormData('height', $event.target.value)"
+        />
       </div>
       <div flex items-center p-y-2 rounded-2 m-b-2>
-        <a-button @click="handle('convert')">
-          convert
-        </a-button>
-        <!-- <a-button @click="handle('composite')">
+        <span text-4 m-r-4 w-20>编辑</span>
+        <el-radio-group
+          :value="form.editType" :options="VIDEO_EDIT_OPTIONS"
+          @change="updateFormData('editType', $event.target.value)"
+        />
+      </div>
+      <div flex items-center p-y-2 rounded-2 m-b-2>
+        <el-button @click="handle('convert')">
+          生成
+        </el-button>
+        <el-button v-if="convert.length" @click="download">
+          下载
+        </el-button>
+        <!-- <el-button @click="handle('composite')">
           composite
-        </a-button> -->
-        <!-- <span text-4 m-r-4>quality</span>
-        <a-slider v-model:value="quality" class="w-full m-r-4" :tip-formatter="null" />
+        </el-button> -->
+        <!-- <span text-4 m-r-4 w-20>quality</span>
+        <el-slider v-model="quality" class="w-full m-r-4" :tip-formatter="null" />
         <div>{{ quality }}%</div> -->
       </div>
       <!-- <div flex items-center p-y-2 rounded-2>
-        <span text-4 m-r-4>download mode</span>
-        <a-radio-group v-model:value="downMode" button-style="solid">
-          <a-radio-button value="zip">
+        <span text-4 m-r-4 w-20>download mode</span>
+        <el-radio-group v-model="downMode" button-style="solid">
+          <el-radio-button value="zip">
             zip
-          </a-radio-button>
-          <a-radio-button value="single">
+          </el-radio-button>
+          <el-radio-button value="single">
             single
-          </a-radio-button>
-        </a-radio-group>
+          </el-radio-button>
+        </el-radio-group>
       </div> -->
     </div>
   </div>

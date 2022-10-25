@@ -19,7 +19,8 @@ export default defineConfig({
     presetAttributify(),
     presetIcons({
       collections: {
-        fxemoji: () => import('@iconify-json/fxemoji/icons.json').then(i => i.default as any),
+        fxemoji: () => import('@iconify-json/fxemoji/icons.json').then(i => i.default),
+        uil: () => import('@iconify-json/uil/icons.json').then(i => i.default),
         carbon: () => import('@iconify-json/carbon/icons.json').then(i => i.default),
       },
       scale: 1.2,

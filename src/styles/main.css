@@ -8,8 +8,12 @@ body,
   padding: 0;
 }
 
+html {
+  background: white;
+}
+
 html.dark {
-  background: #121212;
+  background: #141414;
   color-scheme: dark;
 }
 

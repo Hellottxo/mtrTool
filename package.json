@@ -14,16 +14,25 @@
     "up": "taze major -I"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.11.0",
+    "@ffmpeg/ffmpeg": "^0.11.4",
+    "@iconify-json/uil": "^1.1.2",
     "@vueuse/core": "^9.0.0",
     "@vueuse/head": "^0.7.7",
     "ant-design-vue": "^3.2.10",
+    "element-plus": "^2.2.18",
+    "fabric": "^5.2.4",
     "nprogress": "^0.2.0",
+    "party-js": "^2.2.0",
     "pinia": "^2.0.17",
     "splitting": "^1.0.6",
+    "tesseract.js": "2",
+    "uuid": "^9.0.0",
     "vue": "^3.2.37",
     "vue-demi": "^0.13.6",
     "vue-i18n": "^9.1.10",
     "vue-router": "^4.1.2",
+    "vuedraggable": "^4.1.0",
     "wasm-imagemagick": "^1.2.8"
   },
   "devDependencies": {

@@ -14,10 +14,10 @@ const toggleLocales = () => {
       <div i-fxemoji-sunwithface dark:i-fxemoji-firstquartermoonface />
     </button>
 
-    <a class="icon-btn mx-2" :title="t('button.toggle_langs')" @click="toggleLocales()">
+    <!-- <a class="icon-btn mx-2" :title="t('button.toggle_langs')" @click="toggleLocales()">
       <div i-fxemoji:meridianglobe />
-    </a>
-    <a class="icon-btn mx-2" rel="noreferrer" href="https://github.com/antfu/vitesse" target="_blank" title="GitHub">
+    </a> -->
+    <a class="icon-btn mx-2" rel="noreferrer" href="http://xo.silenttt.top/xo-blog/" target="_blank" title="GitHub">
       <div i-fxemoji-alienmonster />
     </a>
   </nav>
