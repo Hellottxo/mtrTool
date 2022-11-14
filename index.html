@@ -13,6 +13,38 @@
       if (setting === 'dark' || (prefersDark && setting !== 'light'))
         document.documentElement.classList.toggle('dark', true)
     })()
+
+    // 重置console，为了拦截psd信息
+    const log = console.log
+    // 取图片的位置、宽高
+    const TEXT = ['psd:layer.x:', 'psd:layer.y:', 'Geometry:']
+    // 取图片的平均颜色
+    let shouldGetRgb = 0
+
+    window.layerInfo = ''
+    console.log = function () {
+      if (window.shouldGetLayerInfo === true && typeof arguments[0] === 'string') {
+        TEXT.forEach((e) => {
+          arguments[0].includes(e) && (window.layerInfo += `${arguments[0].trim()}&`)
+        })
+    
+        if (arguments[0].trim() === 'Histogram:')
+          shouldGetRgb += 1
+        if (shouldGetRgb === 3) {
+          const leftIndex = arguments[0].indexOf('(')
+          const rightIndex = arguments[0].indexOf(')')
+          window.layerInfo += `rgb${arguments[0].substring(leftIndex, rightIndex + 1)}&`
+          shouldGetRgb = 0
+        }
+        else {
+          shouldGetRgb >= 1 && (shouldGetRgb += 1)
+        }
+
+        return
+      }
+      log(...arguments)
+    }
+
   </script>
 </head>
 <body class="font-sans">

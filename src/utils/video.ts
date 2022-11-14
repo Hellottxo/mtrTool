@@ -5,9 +5,9 @@ export interface ConvertConfig {
   watermarkText: string
   watermarkTextColor: string
   outputExt: string
-  editType: 'three' | 'mask' | ''
+  editType: 'vstack' | 'mask' | 'hstack'
   outputName?: string
-  watermarkTextSize: string
+  watermarkTextSize: number
 }
 
 const getSize = (config: ConvertConfig) => config.height || config.width ? `scale=${config.width || -1}:${config.height || -1}` : ''
@@ -17,7 +17,7 @@ export const generateThreeCommand = (input: string, config: ConvertConfig) => {
   const commands = ['-i', input, '-i', input, '-i', input]
   let main = 'vstack=inputs=3'
   const size = getSize(config)
-  size && (main = `[0:v]${size}[top];[1:v]${size}[center];[2:v]${size}[bottom];[top][center][bottom]vstack=inputs=3[v]`)
+  size && (main = `[0:v]${size}[top];[1:v]${size}[center];[2:v]${size}[bottom];[top][center][bottom]${config.editType}=inputs=3[v]`)
   const text = getText(config)
   text && (main += `${size ? ';[v]' : ''}${text}`)
   commands.push('-filter_complex', main, config.outputName ?? `output.${config.outputExt}`)

@@ -1,12 +1,12 @@
 <script setup lang="ts" name="Toolbar">
-import type { UploadFile } from 'ant-design-vue'
 import Tesseract from 'tesseract.js'
+import type { UploadUserFile } from 'element-plus'
 import List from '../DisplayList/index.vue'
-import { ACCEPT, FORMAT_OPTIONS } from '~/pages/img-tool/config/index'
+import { IMG_ACCEPT } from '~/config/index'
 import { downloadByURL } from '~/utils/utils'
 
 // const downMode = ref('zip')
-const props = defineProps<{ convert: string[]; files: UploadFile[]; active: string }>()
+const props = defineProps<{ convert: string[]; files: UploadUserFile[]; active: string }>()
 
 const emit = defineEmits(['handleConvert', 'activeChg'])
 const outputExt = ref('jpg')
@@ -57,7 +57,7 @@ const getText = async () => {
       list-type="picture-card"
       :before-upload="() => false"
       name="file"
-      :accept="ACCEPT.join(',')"
+      accept=".psd"
       multiple
       :show-upload-list="false"
       @change="$emit('fileChange', $event)"

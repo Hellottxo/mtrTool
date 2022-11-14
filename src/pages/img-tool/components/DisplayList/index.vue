@@ -21,7 +21,7 @@ const handleActive = (id: string) => {
       @click="handleActive(item.uid)"
     >
       <div relative w-full h-full bg-gray-1>
-        <div i-carbon:close-filled absolute right-1 top-1 transition-all color-gray-4 hover:color-green-3 />
+        <div i-carbon:close-filled absolute right-1 top-1 transition-all color-gray-4 hover:color-primary />
         <img :src="item.url" object-contain w-full h-full>
       </div>
     </div>

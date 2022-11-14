@@ -1,4 +1,4 @@
-export const getArrayBuffer = (file: File) => new Promise((resolve) => {
+export const getArrayBuffer = (file: File): Promise<ArrayBuffer> => new Promise((resolve) => {
   const filereader = new FileReader()
   filereader.onload = (e: any) => {
     resolve(e.target.result)

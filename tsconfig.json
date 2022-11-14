@@ -25,5 +25,8 @@
       "~/*": ["src/*"]
     }
   },
+  "vueCompilerOptions": {
+    "target": 2
+  },
   "exclude": ["dist", "node_modules", "cypress"]
 }

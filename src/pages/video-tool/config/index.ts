@@ -6,16 +6,12 @@ export const FORMAT_OPTIONS = [
   'gif',
 ]
 
-export const ACCEPT = [
-  'video/avi',
-  'video/flv',
-  'video/mkv',
-  'video/mp4',
-]
-
 export const VIDEO_EDIT_OPTIONS = [
-  { label: '三联屏', value: 'three' },
-  { label: '蒙版', value: 'mask' },
+  { label: '竖三联屏', value: 'vstack', icon: 'i-uil:smile-squint-wink-alt' },
+  // { label: '横三联屏', value: 'hstack', icon: 'i-uil:smile-squint-wink-alt' },
+  { label: '上蒙版', value: 'up-mask', icon: 'i-uil:smile-squint-wink-alt' },
+  { label: '下蒙版', value: 'down-mask', icon: 'i-uil:smile-beam' },
+  { label: '上下蒙版', value: 'mask', icon: 'i-uil:smile-wink-alt' },
 ]
 
 export const OUTPUT_TRANSLATE = {
@@ -25,3 +21,4 @@ export const OUTPUT_TRANSLATE = {
   mp4: 'video/mp4',
   gif: 'image/gif',
 }
+

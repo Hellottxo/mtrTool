@@ -1,5 +1,7 @@
 import type { UploadUserFile } from 'element-plus'
+import { createWorker } from 'tesseract.js'
 import type { FORMAT_OPTIONS } from '~/pages/img-tool/config'
+
 export interface ConvertConfig {
   quality?: number
   width?: number
@@ -82,12 +84,40 @@ export const convertImage = async (
     return [FS.readFile(`out.${outputExt}`)]
   }
   if (type === 'readInfo')
-    readInfo(inputFiles)
+    return readInfo(inputFiles)
 }
+
+const getGeometry = (s: string) => s.split(':')[1].trim().replace('+0+0', '').split('x')
 
 export const readInfo = (files: { name: string; content: Uint8Array; outPut: string }[]) => {
   files.map(e => FS.writeFile(e.name, e.content))
+  window.shouldGetLayerInfo = true
+  window.layerInfo = ''
+
   const commands = ['identify', '-verbose', files[0].name]
-  console.log(commands)
   Module.callMain(commands)
+  window.shouldGetLayerInfo = false
+  const arr = window.layerInfo.trim().split('&').slice(0, -1)
+  const [w, h] = getGeometry(arr[0])
+  const info = [{ width: Number(w), height: Number(h), left: 0, top: 0, color: arr[1] }]
+  const layerInfoList = arr.slice(2)
+  for (let i = 0; i < layerInfoList.length - 3; i += 4) {
+    const [width, height] = getGeometry(layerInfoList[i])
+    const color = layerInfoList[i + 1]
+    const [, , x] = layerInfoList[i + 2].split(':')
+    const [, , y] = layerInfoList[i + 3].split(':')
+    info.push({ width: Number(width.trim()), color, height: Number(height.trim()), left: Number(x.trim()), top: Number(y.trim()) })
+  }
+  return info
+}
+
+export const speedRecognize = async (url: string, scheduler: Tesseract.Scheduler) => {
+  const worker = createWorker()
+  await worker.load()
+  await worker.loadLanguage('eng+enm')
+  await worker.initialize('eng+enm')
+  scheduler.addWorker(worker)
+  /** Add 10 recognition jobs */
+  const results = await scheduler.addJob('recognize', url)
+  return results
 }

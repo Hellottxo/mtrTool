@@ -1,99 +1,74 @@
-<script setup lang="ts" name="Preview">
-import type { UploadFile } from 'ant-design-vue'
-import { ACCEPT } from '../../config/index'
+<script lang="ts" setup>
+import type { UploadUserFile } from 'element-plus'
+import { IMG_ACCEPT } from '~/config/index'
 
 const props = defineProps<{
-  convert: string[]
-  files: UploadFile[]
-  active: string
-  type: 'img' | 'video'
-  form: Record<string, string>
-  progress: number
+  file?: UploadUserFile
+  type: string
+  maskFile: { up?: UploadUserFile; down?: UploadUserFile }
 }>()
-const buttonRef = ref()
-const handleUpload = () => {
-  buttonRef.value.$el.click()
-}
-const showConvert = ref(true)
+const video1 = ref()
+const video2 = ref()
+const video = ref()
+const upMask = ref()
 
-const prevewMtrIndex = computed(() => props.files.findIndex(e => e.uid === props.active))
+const onClick = (type: 'play' | 'pause') => {
+  if (props.type !== 'three')
+    return;
+  [video1, video2].forEach((e) => {
+    if (!e.value)
+      return
+    type === 'play' && e.value.play()
+    type === 'pause' && e.value.pause()
+  })
+}
 </script>
 
 <template>
-  <div w-full h-full relative bg-gray-1>
-    <div v-if="progress >= 0" w-full h-full flex flex-col items-center justify-center>
-      <div text-12 font-black mb-10>
-        {{ progress }} %
+  <div flex flex-col w-full h-full justify-center items-center dark:bg-gray-9 bg-gray-1 overflow-hidden>
+    <div v-if="file" flex flex-col>
+      <Upload
+        v-if="['mask', 'up-mask'].includes(type)"
+        :accept="IMG_ACCEPT.join(',')"
+        :class="maskFile.up && 'border-none'" transition-all
+        max-w-70 overflow-hidden
+        hover:rounded-1 h-30 flex items-center
+        justify-center border-2 border-dashed
+        dark:border-gray-7
+        border-gray
+        border-b-none
+        @file-change="$emit('fileChg', 'up', $event)"
+      >
+        <img v-if="maskFile.up" :src="maskFile.up.url" class="avatar">
+        <div v-else i-carbon:add text-10 />
+      </Upload>
+      <div v-if="type.includes('stack')" max-w-70>
+        <video ref="video1" height="300" width="300" :src="file.url" />
       </div>
-      <el-progress
-        :percent="progress"
-        status="active"
-        class="progressbar"
-        :show-info="false"
-      />
-    </div>
-    <template v-else>
-      <div v-if="!files.length" w-full h-full cursor-pointer @click="handleUpload">
-        <div hidden>
-          <el-upload
-            :file-list="files"
-            list-type="picture-card"
-            :before-upload="() => false"
-            name="file"
-            :accept="ACCEPT.join(',')"
-            multiple
-            @change="$emit('fileChange', $event)"
-          >
-            <el-button ref="buttonRef" />
-          </el-upload>
-        </div>
-        <div w-full h-full flex flex-col items-center justify-center>
-          <div i-fxemoji:milkyway text-30 />
-          <div text-12 font-black w-100 m-t-10>
-            Video Converter
-          </div>
-          <div text-6 font-black w-100>
-            Drag in or select video or CtrlC+V
-          </div>
-        </div>
+      <div v-if="type.includes('stack')" max-w-70>
+        <video ref="video2" height="300" width="300" :src="file.url" />
+      </div>
+      <div max-w-70>
+        <video ref="video" height="300" width="300" controls :src="file.url" @play="onClick('play')" @pause="onClick('pause')" />
       </div>
 
-      <div v-else flex flex-col justify-center w-full h-full cursor-pointer overflow-hidden>
-        <div v-show="!convert.length || !showConvert" flex flex-1 items-center justify-center h-full>
-          <video v-if="type === 'video'" :src="files[prevewMtrIndex].url" controls autoplay object-contain />
-          <img v-else :src="files[prevewMtrIndex].url">
-        </div>
-        <div v-show="convert.length && showConvert" flex items-center justify-center overflow-hidden>
-          <video v-if="type === 'video' && form.outputExt !== 'gif'" :src="convert[prevewMtrIndex]" controls autoplay object-contain h-full w-auto />
-          <img v-else :src="convert[prevewMtrIndex]" object-contain h-full w-auto>
-        </div>
-        <div m-y-5 text-center>
-          <el-radio-group v-if="convert.length" v-model="showConvert">
-            <el-radio-button :value="false">
-              before
-            </el-radio-button>
-            <el-radio-button :value="true">
-              after
-            </el-radio-button>
-          </el-radio-group>
-        </div>
-      </div>
-    </template>
+      <Upload
+        v-if="['mask', 'down-mask'].includes(type)"
+        :accept="IMG_ACCEPT.join(',')"
+        :class="maskFile.down && 'border-none'" transition-all
+        max-w-70 overflow-hidden
+        hover:rounded-1 h-30 flex items-center
+        justify-center border-2 border-dashed
+        dark:border-gray-7
+        border-gray
+        border-t-none
+        @file-change="$emit('fileChg', 'down', $event)"
+      >
+        <img v-if="maskFile.down" :src="maskFile.down.url" class="avatar">
+        <div v-else i-carbon:add text-10 />
+      </Upload>
+    </div>
+    <div v-else i-fxemoji:filmprojector text-30 />
   </div>
 </template>
 
-<style>
-.progressbar {
-  width: 300px;
-}
-.progressbar .ant-progress-bg {
-  height: 40px !important;
-}
-img, video {
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  max-height: 100%;
-  max-width: 100%;
-}
-</style>

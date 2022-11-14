@@ -27,7 +27,7 @@ const handleChange = (e: any) => {
         text-3
         cursor-pointer flex items-center mb-1 p-1 rounded-1 dark:bg-gray-9 hover:dark:bg-gray-8 bg-gray-1 hover:bg-gray-2 justify-between
         :class="activeLayer.find(e => e.id === item.id) && 'color-primary'"
-        @click="$emit('selectLayer', item)"
+        @click="$emit('selectLayer', [item])"
       >
         <div flex items-center overflow-hidden>
           <div :class="SYMBOL_MAP[item.type].icon" mr-2 />
@@ -37,7 +37,7 @@ const handleChange = (e: any) => {
           </div>
         </div>
         <div flex items-center flex-none>
-          <div i-uil:trash-alt m-x-1 />
+          <div i-uil:trash-alt m-x-1 @click.stop="$emit('delLayer', item.id)" />
           <div i-carbon:draggable class="handle" cursor-all-scroll m-x-1 />
         </div>
       </li>

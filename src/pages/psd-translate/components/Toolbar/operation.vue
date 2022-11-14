@@ -17,7 +17,7 @@ const emit = defineEmits(['operate', 'saveImg'])
       </el-button>
       <el-divider direction="vertical" />
     </div> -->
-    <el-button ref="saveBtn" size="small" type="primary" ml-2 title="导出图片" @click="party.confetti($event); $emit('saveImg')">
+    <el-button ref="saveBtn" size="small" type="primary" title="导出图片" @click="party.confetti($event); $emit('saveImg')">
       <div i-uil:image-download />
     </el-button>
   </div>

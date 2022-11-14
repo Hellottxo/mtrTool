@@ -1,10 +1,9 @@
 <script setup lang="ts" name="Toolbar">
 import type { UploadUserFile } from 'element-plus'
-import { ACCEPT } from '~/pages/img-tool/config/index'
 import { getBase64 } from '~/utils/utils'
 
+const props = defineProps<{ accept: string }>()
 const emit = defineEmits(['fileChange'])
-
 const fileChange = async (val: UploadUserFile) => {
   const url = await getBase64(val.raw as File)
   emit('fileChange', { ...val, url })
@@ -15,10 +14,11 @@ const fileChange = async (val: UploadUserFile) => {
   <el-upload
     :before-upload="() => false"
     name="file"
-    :accept="ACCEPT.join(',')"
+    :accept="accept"
     multiple
     :auto-upload="false"
     :show-file-list="false"
+    v-bind="$attrs"
     @change="fileChange"
   >
     <div flex items-center>
@@ -30,3 +30,4 @@ const fileChange = async (val: UploadUserFile) => {
     </div>
   </el-upload>
 </template>
+

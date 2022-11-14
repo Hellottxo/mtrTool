@@ -1,6 +1,6 @@
 <script setup lang="ts" name="Preview">
 import type { UploadFile } from 'ant-design-vue'
-import { ACCEPT } from '~/pages/img-tool/config/index'
+import { IMG_ACCEPT } from '~/config/index'
 
 const props = defineProps<{ convert: string[]; files: UploadFile[]; active: string }>()
 const buttonRef = ref()
@@ -21,7 +21,7 @@ const prevewMtrIndex = computed(() => props.files.findIndex(e => e.uid === props
           list-type="picture-card"
           :before-upload="() => false"
           name="file"
-          :accept="ACCEPT.join(',')"
+          :accept="IMG_ACCEPT.join(',')"
           multiple
           @change="$emit('fileChange', $event)"
         >

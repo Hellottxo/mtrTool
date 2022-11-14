@@ -1,8 +1,8 @@
 <script lang="ts" setup name="PreviewList">
 import type { UploadFile } from 'ant-design-vue/es/upload'
 
-const props = defineProps<{ list: UploadFile[]; active: string; type: 'img' | 'video' }>()
-const emit = defineEmits(['activeChg', 'del'])
+const props = defineProps<{ list: UploadFile[]; active: string }>()
+const emit = defineEmits(['activeChg'])
 
 const showHover = ref('')
 
@@ -21,12 +21,8 @@ const handleActive = (id: string) => {
       @click="handleActive(item.uid)"
     >
       <div relative w-full h-full bg-gray-1>
-        <div
-          i-carbon:close-filled absolute right-1 top-1 transition-all color-gray-4 hover:color-green-3 z-11
-          @click="$emit('del', item.uid)"
-        />
-        <img v-if="type === 'img'" :src="item.url" object-contain w-full h-full>
-        <video v-else :src="item.url" object-contain w-full h-full />
+        <div i-carbon:close-filled absolute right-1 top-1 transition-all color-gray-4 hover:color-primary />
+        <img :src="item.url" object-contain w-full h-full>
       </div>
     </div>
   </div>

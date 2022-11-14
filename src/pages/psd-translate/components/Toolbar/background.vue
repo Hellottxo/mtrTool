@@ -73,5 +73,6 @@ const activeSize = computed({
         {{ item.width }} * {{ item.height }}
       </div>
     </div>
+    <div />
   </div>
 </template>

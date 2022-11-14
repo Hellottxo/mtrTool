@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { fabric } from 'fabric'
 import type { UploadUserFile } from 'element-plus'
-import { addImg, addShape, exportImg, setBackground } from './utils'
+import type { ConfigResult, DetectResult, RecognizeResult } from 'tesseract.js'
+import { createScheduler } from 'tesseract.js'
+import axios from 'axios'
+import { addImg, addShape, addText, deleteObject, exportImg, setBackground } from './utils'
 import { COMMON_ATTRIBUTE, TEXT_ATTRIBUTE } from './config'
 import Layer from './components/Toolbar/layer.vue'
 import AddMtr from './components/Toolbar/addMtr.vue'
-import Background from './components/Toolbar/background.vue'
+// import Background from './components/Toolbar/background.vue'
 import TextAttribute from './components/Toolbar/text.vue'
 import CommonAttribute from './components/Toolbar/common.vue'
 import Operation from './components/Toolbar/operation.vue'
+import { convertImage, speedRecognize } from '~/utils/psd-translate'
+import { getArrayBuffer } from '~/utils/utils'
 
 const layerList = ref<Record<string, string>[]>([])
 const activeLayer = ref<any[]>([])
@@ -18,11 +23,75 @@ const textAttribute = ref({ ...TEXT_ATTRIBUTE })
 const commonAttribute = ref({ ...COMMON_ATTRIBUTE })
 const prevList = ref<any[]>([])
 const nextList = ref<any[]>([])
+const loading = ref(false)
+const loadingText = ref('')
 
 let card: any = null
 const MAX_HIS = 10
 
-const fileChange = async (file: UploadUserFile) => addImg(card, file)
+const getTextLayer = (textList: (ConfigResult | RecognizeResult | DetectResult)[], infoList: Record<string, number>[]) => {
+  const list = [...card.getObjects()]
+  textList.forEach(async (e, index) => {
+    const { data: { text } } = e
+    const str = text.replace('|', 'I').replace('\n', '')
+    const reg = /^[\u4E00-\u9FA5A-Za-z0-9!.]+$/
+    if (reg.test(str.replaceAll(' ', ''))) {
+      deleteObject(card, list[index])
+      const info = infoList[index]
+      const res = await axios.post('/api/translate', {
+        text: str,
+      })
+      const translateText = res.data.data.TargetText
+      addText(card, translateText, { ...info, ratio: info.height * info.ratio / 40, fill: info.color })
+    }
+  })
+}
+
+const fileChange = async (file: UploadUserFile) => {
+  loading.value = true
+  loadingText.value = '素材加载中'
+  let msgInstance = ElMessage({
+    message: '素材加载中',
+    duration: 0,
+  })
+  const arrayBuffer = await getArrayBuffer(file.raw!)
+  const output = await convertImage('convert', [{ file, arrayBuffer }], 'png', {}) || []
+  const info = await convertImage('readInfo', [{ file, arrayBuffer }], 'png', {}) || []
+  const { width, height } = info[0]
+  const ratio = width > 800 ? 0.6 : 1
+  card.setWidth(width * ratio)
+  card.setHeight(height * ratio)
+  const infoList = info.slice(1).map(e => ({
+    ...e,
+    ratio,
+    left: e.left * ratio,
+    top: e.top * ratio,
+  }))
+  const scheduler = createScheduler()
+  const list: Promise<ConfigResult | RecognizeResult | DetectResult>[] = []
+  output.slice(1).forEach((e, index) => {
+    const url = URL.createObjectURL(new Blob([e.buffer]))
+    addImg(card, { url }, {
+      ratio,
+      left: infoList[index].left,
+      top: infoList[index].top,
+    })
+    list.push(speedRecognize(url, scheduler))
+  })
+  loading.value = false
+  msgInstance.close()
+  msgInstance = ElMessage({
+    message: '素材翻译中',
+    duration: 0,
+  })
+  Promise.all(list).then((res) => {
+    getTextLayer(res, infoList)
+    scheduler.terminate()
+  }).finally(() => {
+    msgInstance.close()
+    ElMessage.success('素材翻译完成！')
+  })
+}
 
 const getLayerList = () => {
   layerList.value = [...card.getObjects()].reverse()
@@ -62,10 +131,10 @@ const updateCommonAttribute = () => {
   }
 }
 
-const handleSelectLayer = (item: any) => {
+const handleSelectLayer = (item: any[]) => {
   card.discardActiveObject()
-  card.setActiveObject(item)
-  card.requestRenderAll()
+  item.forEach(e => card.setActiveObject(e))
+  card.renderAll()
 }
 
 const updateBackground = (key: string, val: UploadUserFile | string | number, val2: number) => {
@@ -194,26 +263,32 @@ const operate = (key: string) => {
     renderCanvas(item)
   }
 }
+
+const delLayer = (id: string) => {
+  const item = card.getObjects().find((e: any) => e.id === id)
+  const index = activeLayer.value.findIndex(e => e.id === id)
+  if (index > -1) {
+    const list = [...activeLayer.value]
+    handleSelectLayer(list)
+  }
+  deleteObject(card, item)
+}
 </script>
 
 <template>
   <div flex h-full>
-    <div flex flex-col w-full h-full justify-center items-center>
+    <div
+      flex flex-col w-full h-full justify-center
+      items-center
+    >
       <canvas id="canvas" w-full h-full dark:bg-gray-9 bg-gray-1 />
       <div v-show="!layerList.length" i-fxemoji:mountainrailway position-absolute text-40 opacity-40 />
     </div>
     <div border-l-1 border-gray-1 dark:border-gray-7 h-full max-w-lg p-x-4 w-80 flex-none overflow-auto>
       <!-- 操作 -->
-      <Operation
-        :config="{ prev: prevList.length - 1, next: nextList.length }"
-        @saveImg="saveImg"
-        @operate="operate"
-      />
+      <Operation :config="{ prev: prevList.length - 1, next: nextList.length }" @saveImg="saveImg" @operate="operate" />
       <!-- 上传 -->
-      <AddMtr
-        @addImg="fileChange"
-        @addMtr="addMtr"
-      />
+      <AddMtr @addImg="fileChange" @addMtr="addMtr" />
       <!-- 图层 -->
       <Layer
         v-if="layerList.length"
@@ -221,24 +296,14 @@ const operate = (key: string) => {
         :active-layer="activeLayer"
         @selectLayer="handleSelectLayer"
         @updateLayer="updateLayer"
+        @delLayer="delLayer"
       />
       <!-- 基础信息 -->
-      <CommonAttribute
-        :attribute="commonAttribute"
-        @commonAttributeChg="commonAttributeChg"
-        @shadowChg="shadowChg"
-      />
+      <CommonAttribute :attribute="commonAttribute" @commonAttributeChg="commonAttributeChg" @shadowChg="shadowChg" />
       <!-- 背景设置 -->
-      <Background
-        :background="background"
-        @updateConfig="updateBackground"
-      />
+      <!-- <Background :background="background" @updateConfig="updateBackground" /> -->
       <!-- 文字 -->
-      <TextAttribute
-        v-if="showTextAttribute"
-        :attribute="textAttribute"
-        @textAttributeChg="textAttributeChg"
-      />
+      <TextAttribute v-if="showTextAttribute" :attribute="textAttribute" @textAttributeChg="textAttributeChg" />
     </div>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UploadFile } from 'ant-design-vue'
+import type { UploadUserFile } from 'element-plus'
 import type { FORMAT_OPTIONS } from './config'
 import Toolbar from './components/Toolbar/index.vue'
 import Preview from './components/Preview/index.vue'
@@ -15,7 +15,7 @@ const active = ref('')
 
 const handleConvert = (type: string, config: ConvertConfig, outputExt: typeof FORMAT_OPTIONS[number]) => {
   spinning.value = true
-  Promise.all(files.value.map(i => getArrayBuffer(i.originFileObj!))).then(async (res) => {
+  Promise.all(files.value.map(i => getArrayBuffer(i.raw!))).then(async (res) => {
     const list = files.value.map((e, i) => ({ file: e, arrayBuffer: res[i] as string }))
     const output = await convertImage(type, list, outputExt, config)
     if (!output) {
@@ -30,12 +30,13 @@ const handleConvert = (type: string, config: ConvertConfig, outputExt: typeof FO
   })
 }
 
-const fileChange = ({ fileList }: { fileList: UploadFile[] }) => {
-  files.value = [...fileList]
-  !active.value && (active.value = files.value[0].uid)
-  Promise.all(fileList.map(e => getBase64(e.originFileObj as File)))
+const fileChange = (file: UploadUserFile) => {
+  files.value = [file]
+  console.log(file)
+  !active.value && (active.value = file.uid)
+  Promise.all([getBase64(file.raw)])
     .then((res) => {
-      files.value = fileList.map((e, i) => ({ ...e, url: res[i] as string }))
+      files.value = [file].map((e, i) => ({ ...e, url: res[i] as string }))
     })
   handleConvert('convert', {}, 'png')
   // handleConvert('readInfo', {}, 'png')

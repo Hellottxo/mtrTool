@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg'
-import type { UploadFile } from 'ant-design-vue'
+import type { UploadUserFile } from 'element-plus'
 import Toolbar from './components/Toolbar/index.vue'
+import VideoTemplate from './components/VideoTemplate/index.vue'
 import Preview from './components/Preview/index.vue'
 import { OUTPUT_TRANSLATE } from './config'
-import { getBase64 } from '~/utils/utils.js'
 import { generateConvertCommand, generateThreeCommand } from '~/utils/video'
 import type { ConvertConfig } from '~/utils/video'
+
+const progress = ref(-1)
+const file = ref<UploadUserFile>()
+const maskFile = reactive<{ up?: UploadUserFile; down?: UploadUserFile }>({})
 
 const ffmpeg = createFFmpeg({
   log: true,
@@ -35,31 +39,21 @@ const form = reactive<ConvertConfig>({
   watermarkTextColor: 'black',
   watermarkTextSize: 60,
 })
-const progress = ref(-1)
-
-const files = ref<UploadFile[]>([])
-const fileChg = ({ fileList }: { fileList: UploadFile[] }) => {
-  console.log(fileList)
-  files.value = [...fileList]
-  !active.value && (active.value = files.value[0].uid)
-  Promise.all(fileList.map(e => getBase64(e.originFileObj as File)))
-    .then((res) => {
-      files.value = fileList.map((e, i) => ({ ...e, url: res[i] as string }))
-    })
-}
 
 const handleConvert = async () => {
   progress.value = 0
+  if (!file.value)
+    return
   const start = Date.now()
-  ffmpeg.FS('writeFile', files.value[0].name, await fetchFile(files.value[0].originFileObj as File))
-  let input = files.value[0].name
-  if (form.editType === 'three') {
+  ffmpeg.FS('writeFile', file.value.name, await fetchFile(file.value.raw as File))
+  let input = file.value.name
+  if (form.editType.includes('stack')) {
     input = `output.${form.outputExt}`
-    await ffmpeg.run(...generateThreeCommand(files.value[0].name, form))
+    await ffmpeg.run(...generateThreeCommand(file.value.name, form))
     console.log(1)
   }
   else {
-    await ffmpeg.run(...generateConvertCommand(files.value[0].name, form))
+    await ffmpeg.run(...generateConvertCommand(file.value.name, form))
   }
 
   const cost = (Date.now() - start) / 1000
@@ -72,37 +66,35 @@ const handleConvert = async () => {
 
 const updateForm = (key: string, val: string) => form[key] = val
 
-const activeChg = (id: string) => active.value = id
+const fileChg = (item: UploadUserFile) => file.value = item
 
-const delMtr = (id: string) => {
-  const index = files.value.findIndex(e => e.uid === id)
-  index > -1 && files.value.splice(index, 1)
-  id === active.value && (active.value = files.value?.[0]?.uid || '')
-}
+const activeChg = (type: ConvertConfig['editType']) => form.editType = type
+
+const updateMaskFile = (key: 'up' | 'down', val: UploadUserFile) => maskFile[key] = val
 </script>
 
 <template>
   <div flex h-full>
+    <VideoTemplate
+
+      :type="form.editType"
+      @active-chg="activeChg"
+    />
+    <Preview
+      :file="file"
+      :type="form.editType"
+      :mask-file="maskFile"
+      @fileChg="updateMaskFile"
+    />
     <Toolbar
-      :files="files"
+      border-l-1 border-color w-80
+      :file="file"
       :active="active"
       :form="form"
       :convert="convertURL"
       @handleConvert="handleConvert"
       @fileChg="fileChg"
-      @activeChg="activeChg"
       @updateForm="updateForm"
-      @del="delMtr"
-    />
-    <Preview
-      type="video"
-      border-l-1 border-gray-1 dark:border-gray-7
-      :convert="convertURL"
-      :files="files"
-      :active="active"
-      :form="form"
-      :progress="progress"
-      @file-change="fileChg"
     />
   </div>
 </template>

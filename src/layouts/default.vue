@@ -4,7 +4,7 @@ const router = useRouter()
 const route = useRoute()
 
 const MENU = [
-  { path: '/translate', name: '素材翻译' },
+  { path: '/psd-translate', name: '素材翻译' },
   { path: '/video-tool', name: '视频创编' },
   { path: '/img-tool', name: '图片创编' },
 ]
