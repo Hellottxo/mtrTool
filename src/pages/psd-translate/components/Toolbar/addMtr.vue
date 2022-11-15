@@ -1,7 +1,6 @@
 <script setup name="addMtr" lang="ts">
 import type { UploadUserFile } from 'element-plus'
 import { MTR_SYMBOL } from '../../config/index'
-import { IMG_ACCEPT } from '~/config/index'
 
 const emit = defineEmits(['addImg', 'addMtr'])
 
@@ -15,7 +14,7 @@ const fileChange = async (val: UploadUserFile) => {
     添加元素
   </el-divider>
   <div flex items-center>
-    <Upload :accept="`${IMG_ACCEPT.join(',')},.psd`" @file-change="fileChange($event)">
+    <Upload accept=".psd" @file-change="fileChange($event)">
       <el-button size="small" title="添加图片">
         <div class="i-uil:image-plus" />
       </el-button>

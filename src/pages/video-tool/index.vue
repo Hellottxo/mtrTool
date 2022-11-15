@@ -5,12 +5,32 @@ import Toolbar from './components/Toolbar/index.vue'
 import VideoTemplate from './components/VideoTemplate/index.vue'
 import Preview from './components/Preview/index.vue'
 import { OUTPUT_TRANSLATE } from './config'
-import { generateConvertCommand, generateThreeCommand } from '~/utils/video'
+import {
+  generateHtoVCommand,
+  generateMaskCommand,
+  generatePadCommand,
+  generateThreeCommand,
+} from '~/utils/video'
 import type { ConvertConfig } from '~/utils/video'
+
+const initial = {
+  outputExt: 'mp4',
+  quality: 60,
+  width: 720,
+  height: 1280,
+  editType: 'htov',
+  watermarkText: '',
+  watermarkTextColor: 'black',
+  watermarkTextSize: 60,
+} as ConvertConfig
 
 const progress = ref(-1)
 const file = ref<UploadUserFile>()
 const maskFile = reactive<{ up?: UploadUserFile; down?: UploadUserFile }>({})
+const videoRatio = ref(1)
+const convertURL = ref<string[]>([])
+const active = ref('')
+const form = reactive<ConvertConfig>({ ...initial })
 
 const ffmpeg = createFFmpeg({
   log: true,
@@ -27,38 +47,74 @@ ffmpeg.setProgress(({ ratio }) => {
     */
 })
 
-const convertURL = ref<string[]>([])
-const active = ref('')
-const form = reactive<ConvertConfig>({
-  outputExt: 'mp4',
-  quality: 60,
-  width: undefined,
-  height: undefined,
-  editType: '',
-  watermarkText: '',
-  watermarkTextColor: 'black',
-  watermarkTextSize: 60,
-})
+const reset = () => {
+  progress.value = -1
+  maskFile.up = undefined
+  maskFile.down = undefined
+  videoRatio.value = 1
+  convertURL.value = []
+  active.value = ''
+  Object.entries(initial).forEach(([key, val]) => form[key] = val)
+}
 
 const handleConvert = async () => {
   progress.value = 0
   if (!file.value)
     return
   const start = Date.now()
+  let outputFileName = 'output'
   ffmpeg.FS('writeFile', file.value.name, await fetchFile(file.value.raw as File))
   let input = file.value.name
+  // 三联屏
   if (form.editType.includes('stack')) {
     input = `output.${form.outputExt}`
-    await ffmpeg.run(...generateThreeCommand(file.value.name, form))
-    console.log(1)
+    await ffmpeg.run(...generateThreeCommand([file.value.name, file.value.name, file.value.name], form))
   }
-  else {
-    await ffmpeg.run(...generateConvertCommand(file.value.name, form))
+  const videoHeight = form.height! / videoRatio.value
+
+  if (form.editType === 'up-mask') {
+    if (!maskFile.up)
+      return ElMessage.warning('请添加上蒙版！')
+    ffmpeg.FS('writeFile', maskFile.up?.name, await fetchFile(maskFile.up?.raw as File))
+    await ffmpeg.run(...(`-i ${file.value.name} -vf scale=${form.height}:-2 main.mp4`.split(' ')))
+    await ffmpeg.run(...generatePadCommand('up-mask', 'main.mp4', form))
+    await ffmpeg.run(...(`-i ${maskFile.up.name} -vf scale=${form.height}:${1280 - videoHeight} up.png`.split(' ')))
+    await ffmpeg.run(...generateMaskCommand('pad.mp4', 'up-mask', 0))
+    outputFileName = form.editType
   }
+
+  if (form.editType === 'down-mask') {
+    if (!maskFile.down)
+      return ElMessage.warning('请添加下蒙版！')
+    ffmpeg.FS('writeFile', maskFile.down?.name, await fetchFile(maskFile.down?.raw as File))
+    await ffmpeg.run(...(`-i ${file.value.name} -vf scale=${form.height}:-2 main.mp4`.split(' ')))
+    await ffmpeg.run(...generatePadCommand('down-mask', 'main.mp4', form))
+    await ffmpeg.run(...(`-i ${maskFile.down.name} -vf scale=${form.height}:${1280 - videoHeight} down.png`.split(' ')))
+    await ffmpeg.run(...generateMaskCommand('pad.mp4', 'down-mask', videoHeight))
+    outputFileName = form.editType
+  }
+
+  if (form.editType === 'mask') {
+    if (!maskFile.up || !maskFile.down)
+      return ElMessage.warning('请添加上下蒙版！')
+    const imgHeight = (1280 - videoHeight) / 2
+    ffmpeg.FS('writeFile', maskFile.down?.name, await fetchFile(maskFile.down?.raw as File))
+    ffmpeg.FS('writeFile', maskFile.up?.name, await fetchFile(maskFile.up?.raw as File))
+    await ffmpeg.run(...(`-i ${file.value.name} -vf scale=${form.height}:-2 main.mp4`.split(' ')))
+    await ffmpeg.run(...generatePadCommand('mask', 'main.mp4', form))
+    await ffmpeg.run(...(`-i ${maskFile.down.name} -vf scale=${form.height}:${imgHeight} down.png`.split(' ')))
+    await ffmpeg.run(...(`-i ${maskFile.up.name} -vf scale=${form.height}:${imgHeight} up.png`.split(' ')))
+    await ffmpeg.run(...generateMaskCommand('pad.mp4', 'up-mask', 0))
+    await ffmpeg.run(...generateMaskCommand('up-mask.mp4', 'down-mask', videoHeight + imgHeight))
+    outputFileName = 'down-mask'
+  }
+
+  if (form.editType === 'htov')
+    await ffmpeg.run(...generateHtoVCommand(file.value.name, form))
 
   const cost = (Date.now() - start) / 1000
   console.log(`耗时: ${cost} s`)
-  const data = ffmpeg.FS('readFile', `output.${form.outputExt}`)
+  const data = ffmpeg.FS('readFile', `${outputFileName}.${form.outputExt}`)
   convertURL.value = [URL.createObjectURL(
     new Blob([data.buffer], { type: OUTPUT_TRANSLATE[form.outputExt] }),
   )]
@@ -76,15 +132,19 @@ const updateMaskFile = (key: 'up' | 'down', val: UploadUserFile) => maskFile[key
 <template>
   <div flex h-full>
     <VideoTemplate
-
       :type="form.editType"
       @active-chg="activeChg"
     />
     <Preview
+      v-loading="progress !== -1"
+      element-loading-text="全力以赴中..."
       :file="file"
       :type="form.editType"
       :mask-file="maskFile"
+      :convert="convertURL"
+      :form="form"
       @fileChg="updateMaskFile"
+      @updateRatio="videoRatio = $event"
     />
     <Toolbar
       border-l-1 border-color w-80
@@ -95,6 +155,7 @@ const updateMaskFile = (key: 'up' | 'down', val: UploadUserFile) => maskFile[key
       @handleConvert="handleConvert"
       @fileChg="fileChg"
       @updateForm="updateForm"
+      @reset="reset"
     />
   </div>
 </template>

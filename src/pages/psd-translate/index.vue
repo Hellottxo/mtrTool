@@ -137,22 +137,22 @@ const handleSelectLayer = (item: any[]) => {
   card.renderAll()
 }
 
-const updateBackground = (key: string, val: UploadUserFile | string | number, val2: number) => {
-  if (key === 'size') {
-    background.width = val as number
-    background.height = val2 as number
-    card.setWidth(val * background.scale)
-    card.setHeight(val2 * background.scale)
-    return
-  }
-  if (key === 'color') {
-    background.color = val as string
-    card.backgroundColor = val
-    card.renderAll()
-  }
-  if (key === 'img')
-    setBackground(card, val as UploadUserFile)
-}
+// const updateBackground = (key: string, val: UploadUserFile | string | number, val2: number) => {
+//   if (key === 'size') {
+//     background.width = val as number
+//     background.height = val2 as number
+//     card.setWidth(val * background.scale)
+//     card.setHeight(val2 * background.scale)
+//     return
+//   }
+//   if (key === 'color') {
+//     background.color = val as string
+//     card.backgroundColor = val
+//     card.renderAll()
+//   }
+//   if (key === 'img')
+//     setBackground(card, val as UploadUserFile)
+// }
 
 let inHistoryOperation = false
 const saveHistory = () => {

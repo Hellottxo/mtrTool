@@ -18,6 +18,7 @@ const handle = (val: string) => {
 }
 
 const updateFormData = (key: string, val: string) => {
+  console.log(key, val)
   emit('updateForm', key, val)
 }
 const download = () => {
@@ -26,14 +27,19 @@ const download = () => {
 
 const PREDEFINE_SIZE = [
   { width: 720, height: 1280, name: '竖版', id: 1 },
-  { width: 1280, height: 720, name: '横版', id: 2 },
+  // { width: 1280, height: 720, name: '横版', id: 2 },
 ]
+
+const watermarkText = computed({
+  get: () => props.form.watermarkText,
+  set: (val: string) => updateFormData('watermarkText', val),
+})
 </script>
 
 <template>
   <div h-full max-w-lg p-x-4>
     <el-divider content-position="left">
-      操作
+      基础操作
     </el-divider>
     <div flex items-center>
       <Upload :accept="VIDEO_ACCEPT.join(',')" @file-change="$emit('fileChg', $event)">
@@ -42,11 +48,15 @@ const PREDEFINE_SIZE = [
         </el-button>
       </Upload>
       <el-divider direction="vertical" />
-      <el-button size="small" mr-2 @click="handle('convert')">
+      <el-button size="small" @click="handle('convert')">
         生成
       </el-button>
       <el-divider direction="vertical" />
-      <el-button :disabled="!convert.length" size="small" mr-2 @click="party.confetti($event); download()">
+      <el-button size="small" @click="$emit('reset')">
+        重置
+      </el-button>
+      <el-divider direction="vertical" />
+      <el-button :disabled="!convert.length" size="small" @click="party.confetti($event); download()">
         下载
       </el-button>
     </div>
@@ -55,14 +65,14 @@ const PREDEFINE_SIZE = [
         基础信息
       </el-divider>
 
-      <div flex items-center rounded-2 m-b-2>
+      <!-- <div flex items-center rounded-2 m-b-2>
         <span mr-2 shrink-0>宽度</span>
         <el-input-number size="small" :model-value="form.width" :min="0" @change="updateFormData('width', $event)" />
       </div>
       <div flex items-center rounded-2 m-b-2>
         <span mr-2 shrink-0>高度</span>
         <el-input-number size="small" :model-value="form.height" :min="0" @change="updateFormData('height', $event)" />
-      </div>
+      </div> -->
       <div flex items-center rounded-2 m-b-2>
         <span mr-2>导出格式</span>
         <el-select
@@ -87,8 +97,8 @@ const PREDEFINE_SIZE = [
             :key="item.id"
             w-full p-1 m-1 rounded-1 dark:bg-gray-9 hover:dark:bg-gray-8 bg-gray-1 hover:bg-gray-2
             cursor-pointer
-            :class="activeSize === item.id && 'color-primary'"
-            @click="activeSize = item.id"
+            :class="form.width === item.width && form.height === item.height && 'color-primary'"
+            @click="updateFormData('width', item.width); updateFormData('height', item.height)"
           >
             {{ item.name }}
             {{ item.width }} * {{ item.height }}
@@ -105,27 +115,26 @@ const PREDEFINE_SIZE = [
         />
         <div>{{ form.quality }}%</div>
       </div> -->
-      <el-divider content-position="left">
+      <!-- <el-divider content-position="left">
         水印
       </el-divider>
       <div v-if="form.outputExt !== 'png'" flex items-center rounded-2 m-b-2>
         <span mr-2 shrink-0>水印文字</span>
         <el-input
-          :value="form.watermarkText"
+          v-model="watermarkText"
           placeholder="请添加水印文字"
           size="small"
-          @change="updateFormData('watermarkText', $event.target.value)"
         />
       </div>
       <div flex items-center rounded-2 m-b-2>
         <span mr-2 shrink-0>文字颜色</span>
-        <el-color-picker :model-value="form.color" size="small" show-alpha :predefine="PREDEFINE_COLOR" @change="$emit('watermarkTextColor', $event)" />
+        <el-color-picker :model-value="form.watermarkTextColor" size="small" show-alpha :predefine="PREDEFINE_COLOR" @change="$emit('watermarkTextColor', $event)" />
       </div>
 
       <div flex items-center rounded-2 m-b-2>
         <span mr-2 shrink-0>文字大小</span>
         <el-input-number size="small" :model-value="form.watermarkTextSize" :min="0" @change="$emit('watermarkTextSize', $event)" />
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

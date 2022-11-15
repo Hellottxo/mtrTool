@@ -21,7 +21,7 @@ const fileChange = async (val: UploadUserFile) => {
     v-bind="$attrs"
     @change="fileChange"
   >
-    <div flex items-center>
+    <div flex items-center justify-center>
       <slot>
         <el-button size="small">
           上传

@@ -9,19 +9,22 @@ const emit = defineEmits(['activeChg'])
     <el-divider content-position="left">
       模板
     </el-divider>
-    <div flex flex-wrap items-center justify-between>
+    <div flex flex-wrap items-center justify-between style="margin: 0 -8px">
       <div
         v-for="item in VIDEO_EDIT_OPTIONS" :key="item.value"
-        :class="type === item.value && 'text-primary border-primary'"
-        flex-1 border-1 border-box
-        w-43 p-4 transition-all
-        m-1 rounded-2 cursor-pointer
-        border-color
-        hover:color-primary
-        hover:border-primary
+        class="w-[50%]"
         @click="$emit('activeChg', item.value)"
       >
-        <div flex flex-col justify-center items-center>
+        <div
+          flex flex-col justify-center items-center
+          :class="`${type === item.value && 'text-primary border-primary'} `"
+          border-1 border-box m-1
+          p-2 transition-all
+          rounded-2 cursor-pointer
+          border-color
+          hover:color-primary
+          hover:border-primary
+        >
           <div v-if="item.value !== type" i-fxemoji:monkeysee mb-2 text-6 />
           <div v-else i-fxemoji:monkeyhear mb-2 text-6 />
           <div text-1>
