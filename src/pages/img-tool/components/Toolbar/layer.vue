@@ -37,7 +37,7 @@ const handleChange = (e: any) => {
           </div>
         </div>
         <div flex items-center flex-none>
-          <div i-uil:trash-alt m-x-1 />
+          <div i-uil:trash-alt m-x-1 @click.stop="$emit('delLayer', item.id)" />
           <div i-carbon:draggable class="handle" cursor-all-scroll m-x-1 />
         </div>
       </li>

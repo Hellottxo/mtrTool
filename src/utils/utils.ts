@@ -27,3 +27,5 @@ export const downloadByURL = (url: string, filename?: string) => {
   elink.click()
   document.body.removeChild(elink)
 }
+
+export const getImageURL = (path: string) => new URL(path, import.meta.url).href

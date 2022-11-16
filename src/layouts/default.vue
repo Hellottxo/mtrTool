@@ -26,9 +26,11 @@ watch(() => route.path, () => {
       <div flex items-center>
         <div px-4 i-fxemoji:blossom />
         <span text-4>创编工具</span>
-        <el-select ref="select" v-model="currentPath" size="small" style="width: 120px" ml-4 @change="handleChange">
-          <el-option v-for="item in MENU" :key="item.path" :value="item.path" :label="item.name" />
-        </el-select>
+        <div id="router-select">
+          <el-select ref="select" v-model="currentPath" size="small" style="width: 120px" ml-4 @change="handleChange">
+            <el-option v-for="item in MENU" :key="item.path" :value="item.path" :label="item.name" />
+          </el-select>
+        </div>
       </div>
       <HeaderLink />
     </div>

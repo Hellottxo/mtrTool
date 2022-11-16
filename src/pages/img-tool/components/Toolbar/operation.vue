@@ -9,7 +9,7 @@ const emit = defineEmits(['operate', 'saveImg'])
   <el-divider content-position="left">
     基础操作
   </el-divider>
-  <div flex items-center mb-2>
+  <div id="download" flex items-center mb-2>
     <!-- <div v-for="item in HISTORY" :key="item.type">
       <el-button size="small" :title="item.name" :disabled="config[item.type] <= 0" @click="$emit('operate', item.type)">
         <div :class="item.icon" />
@@ -17,9 +17,13 @@ const emit = defineEmits(['operate', 'saveImg'])
       </el-button>
       <el-divider direction="vertical" />
     </div> -->
-    <el-button ref="saveBtn" size="small" type="primary" ml-2 title="导出图片" @click="party.confetti($event); $emit('saveImg')">
+    <el-button ref="saveBtn" size="small" type="primary" title="导出图片" @click="party.confetti($event); $emit('saveImg')">
       <div i-uil:image-download />
     </el-button>
+    <el-divider direction="vertical" />
+    <!-- <el-button ref="saveBtn" size="small" title="保存为模板" @click="party.confetti($event); $emit('saveTemplate')">
+      <div i-carbon:json />
+    </el-button> -->
   </div>
 </template>
 

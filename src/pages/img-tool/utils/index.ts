@@ -9,6 +9,7 @@ const INITIAL_CONFIG = {
   shadow: '',
   fontFamily: 'arial',
   fontSize: 40,
+  fontWeight: 400,
   radius: 20,
   fill: '#ffb636',
 }
@@ -55,7 +56,7 @@ export const addImg = (card: any, file: UploadUserFile) => {
 }
 
 export const addText = (card: any) => {
-  const text = new fabric.IText('万事胜意', {
+  const text = new fabric.IText('双击编辑', {
     ...INITIAL_CONFIG,
     id: uuid(),
   })
@@ -110,4 +111,9 @@ export const exportImg = (card: any) => {
   const option = { name: '图片', format: 'png', quality: 1, multiplier: 2 }
   const url = card.toDataURL(option)
   downloadByURL(url)
+}
+
+export const deleteObject = (card: any, item: any) => {
+  card.remove(item)
+  card.requestRenderAll()
 }

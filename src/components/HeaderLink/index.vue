@@ -17,8 +17,8 @@ const toggleLocales = () => {
     <!-- <a class="icon-btn mx-2" :title="t('button.toggle_langs')" @click="toggleLocales()">
       <div i-fxemoji:meridianglobe />
     </a> -->
-    <a class="icon-btn mx-2" rel="noreferrer" href="http://xo.silenttt.top/xo-blog/" target="_blank" title="GitHub">
+    <!-- <a class="icon-btn mx-2" rel="noreferrer" href="http://xo.silenttt.top/xo-blog/" target="_blank" title="GitHub">
       <div i-fxemoji-alienmonster />
-    </a>
+    </a> -->
   </nav>
 </template>

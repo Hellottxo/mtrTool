@@ -14,6 +14,7 @@ import CommonAttribute from './components/Toolbar/common.vue'
 import Operation from './components/Toolbar/operation.vue'
 import { convertImage, speedRecognize } from '~/utils/psd-translate'
 import { getArrayBuffer } from '~/utils/utils'
+import quickKeys from '~/utils/hotkeys'
 
 const layerList = ref<Record<string, string>[]>([])
 const activeLayer = ref<any[]>([])
@@ -94,6 +95,7 @@ const fileChange = async (file: UploadUserFile) => {
 }
 
 const getLayerList = () => {
+  console.log('qqwww', card.getObjects())
   layerList.value = [...card.getObjects()].reverse()
 }
 
@@ -198,6 +200,7 @@ const init = () => {
 
   card.preserveObjectStacking = true
   setControlsStyle()
+  quickKeys(card)
 }
 onMounted(init)
 
@@ -266,12 +269,12 @@ const operate = (key: string) => {
 
 const delLayer = (id: string) => {
   const item = card.getObjects().find((e: any) => e.id === id)
+  deleteObject(card, item)
   const index = activeLayer.value.findIndex(e => e.id === id)
   if (index > -1) {
     const list = [...activeLayer.value]
     handleSelectLayer(list)
   }
-  deleteObject(card, item)
 }
 </script>
 

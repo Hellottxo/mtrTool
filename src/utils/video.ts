@@ -10,7 +10,7 @@ export interface ConvertConfig {
   watermarkTextSize: number
 }
 
-const getSize = (config: ConvertConfig) => config.height || config.width ? `scale=${config.width || -1}:${config.height || -1}` : ''
+const getSize = (config: ConvertConfig) => config.height || config.width ? `scale=${config.width || -1}:${(config.height / 3) || -1}` : ''
 const getText = (config: ConvertConfig) => config.watermarkText ? `drawtext=text='${config.watermarkText}':fontcolor=${config.watermarkTextColor}:x=0:y=0:fontfile=font.ttf:fontsize=${config.watermarkTextSize}` : ''
 
 // 三联屏
@@ -19,10 +19,12 @@ export const generateThreeCommand = (input: string[], config: ConvertConfig) => 
   input.forEach(e => commands.push('-i', e))
   let main = `vstack=inputs=${input.length}`
   const size = getSize(config)
-  size && (main = `[0:v]${size}[top];[1:v]${size}[center];[2:v]${size}[bottom];[top][center][bottom]${config.editType}=inputs=3[v]`)
-  const text = getText(config)
-  text && (main += `${size ? ';[v]' : ''}${text}`)
+  // size && (main = `[0:v]${size}[top];[1:v]${size}[center];[2:v]${size}[bottom];[top][center][bottom]${config.editType}=inputs=3[v]`)
+  size && (main = `[0:v][1:v][2:v]vstack=inputs=${input.length}[tmp];[tmp]scale=${config.width}:${config.height}`)
+  // const text = getText(config)
+  // text && (main += `${size ? ';[v]' : ''}${text}`)
   commands.push('-filter_complex', main, config.outputName ?? `output.${config.outputExt}`)
+  console.log(commands)
   return commands
 }
 

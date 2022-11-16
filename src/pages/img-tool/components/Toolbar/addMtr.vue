@@ -14,7 +14,7 @@ const fileChange = async (val: UploadUserFile) => {
   <el-divider content-position="left">
     添加元素
   </el-divider>
-  <div flex items-center>
+  <div id="add-mtr" flex items-center>
     <Upload :accept="IMG_ACCEPT.join(',')" @file-change="fileChange($event)">
       <el-button size="small" title="添加图片">
         <div class="i-uil:image-plus" />

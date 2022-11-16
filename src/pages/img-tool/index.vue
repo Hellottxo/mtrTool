@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { fabric } from 'fabric'
 import type { UploadUserFile } from 'element-plus'
-import { addImg, addShape, exportImg, setBackground } from './utils'
-import { COMMON_ATTRIBUTE, TEXT_ATTRIBUTE } from './config'
+import Driver from 'driver.js'
+import 'driver.js/dist/driver.min.css'
+import axios from 'axios'
+import { addImg, addShape, deleteObject, exportImg, setBackground } from './utils'
+import { COMMON_ATTRIBUTE, STEPS, TEXT_ATTRIBUTE } from './config'
 import Layer from './components/Toolbar/layer.vue'
 import AddMtr from './components/Toolbar/addMtr.vue'
 import Background from './components/Toolbar/background.vue'
 import TextAttribute from './components/Toolbar/text.vue'
 import CommonAttribute from './components/Toolbar/common.vue'
 import Operation from './components/Toolbar/operation.vue'
+import ImgTemplate from './components/Template/index.vue'
+import quickKeys from '~/utils/hotkeys'
 
 const layerList = ref<Record<string, string>[]>([])
 const activeLayer = ref<any[]>([])
@@ -19,12 +24,15 @@ const commonAttribute = ref({ ...COMMON_ATTRIBUTE })
 const prevList = ref<any[]>([])
 const nextList = ref<any[]>([])
 
+const DRIVER_KEY = '@imgTool/isNewUser'
+
 let card: any = null
 const MAX_HIS = 10
 
 const fileChange = async (file: UploadUserFile) => addImg(card, file)
 
 const getLayerList = () => {
+  console.log(card.getObjects())
   layerList.value = [...card.getObjects()].reverse()
 }
 
@@ -34,12 +42,14 @@ const updateTextAttribute = () => {
   showTextAttribute.value = textLayer.length === 1
   if (textLayer.length === 1) {
     const textItem = textLayer[0]
+    console.log(textItem)
     textAttribute.value = {
       textBackgroundColor: textItem.textBackgroundColor,
       lineHeight: Number(textItem.lineHeight),
       fontSize: Number(textItem.fontSize),
       charSpacing: Number(textItem.charSpacing),
       textAlign: textItem.textAlign,
+      fontWeight: Number(textItem.fontWeight),
     }
   }
   else {
@@ -129,8 +139,29 @@ const init = () => {
 
   card.preserveObjectStacking = true
   setControlsStyle()
+  quickKeys(card)
 }
-onMounted(init)
+
+const setDriver = () => {
+  if (localStorage.getItem(DRIVER_KEY))
+    return
+  nextTick(() => {
+    const driver = new Driver({
+      doneBtnText: '完成', // Text on the final button
+      closeBtnText: '关闭', // Text on the close button for this step
+      nextBtnText: '下一步', // Next button text for this step
+      prevBtnText: '上一步',
+    })
+    driver.defineSteps(STEPS)
+    driver.start()
+  })
+  localStorage.setItem(DRIVER_KEY, '1')
+}
+
+onMounted(() => {
+  init()
+  setDriver()
+})
 
 const updateLayer = (item: any) => {
   if (!item)
@@ -155,6 +186,7 @@ const attributeChg = (type: string, key: string, val: unknown) => {
     common: commonAttribute.value,
   }
   map[type][key] = val
+  console.log(textAttribute.value)
   card.getActiveObjects().forEach((e: any) => {
     e && e.set(key, val)
   })
@@ -194,15 +226,40 @@ const operate = (key: string) => {
     renderCanvas(item)
   }
 }
+
+const delLayer = (id: string) => {
+  const item = card.getObjects().find((e: any) => e.id === id)
+  deleteObject(card, item)
+  const index = activeLayer.value.findIndex(e => e.id === id)
+  if (index > -1) {
+    const list = [...activeLayer.value]
+    handleSelectLayer(list)
+  }
+}
+
+const addJson = (key: string) => {
+  axios.get(`../../../../src/assets/json/${key}.json`).then((res) => {
+    card.loadFromJSON(JSON.stringify(res.data), card.renderAll.bind(card))
+  })
+}
+
+// const saveTemplate = () => {
+//   const url = tcard.toJSON(['id'])
+//   const fileStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(url, null, '\t'))}`;
+
+// }
 </script>
 
 <template>
   <div flex h-full>
-    <div flex flex-col w-full h-full justify-center items-center>
+    <div border-r-1 border-color>
+      <ImgTemplate @addJson="addJson" />
+    </div>
+    <div id="preview" flex flex-col w-full h-full justify-center items-center>
       <canvas id="canvas" w-full h-full dark:bg-gray-9 bg-gray-1 />
       <div v-show="!layerList.length" i-fxemoji:mountainrailway position-absolute text-40 opacity-40 />
     </div>
-    <div border-l-1 border-gray-1 dark:border-gray-7 h-full max-w-lg p-x-4 w-80 flex-none overflow-auto>
+    <div id="toolbar" border-l-1 border-gray-1 dark:border-gray-7 h-full max-w-lg p-x-4 w-80 flex-none overflow-auto>
       <!-- 操作 -->
       <Operation
         :config="{ prev: prevList.length - 1, next: nextList.length }"
@@ -221,6 +278,13 @@ const operate = (key: string) => {
         :active-layer="activeLayer"
         @selectLayer="handleSelectLayer"
         @updateLayer="updateLayer"
+        @delLayer="delLayer"
+      />
+      <!-- 文字 -->
+      <TextAttribute
+        v-if="showTextAttribute"
+        :attribute="textAttribute"
+        @textAttributeChg="textAttributeChg"
       />
       <!-- 基础信息 -->
       <CommonAttribute
@@ -233,12 +297,6 @@ const operate = (key: string) => {
         :background="background"
         @updateConfig="updateBackground"
       />
-      <!-- 文字 -->
-      <TextAttribute
-        v-if="showTextAttribute"
-        :attribute="textAttribute"
-        @textAttributeChg="textAttributeChg"
-      />
     </div>
   </div>
 </template>
@@ -248,3 +306,4 @@ const operate = (key: string) => {
   height: 100%;
 }
 </style>
+
